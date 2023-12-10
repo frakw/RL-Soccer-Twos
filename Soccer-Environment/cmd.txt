@@ -1,1 +1,7 @@
-conda create -n rl_comp2 --file anaconda_environment.txt
+匯入環境:
+conda create -n rl_comp2 --file conda_env.txt
+輸出環境:
+conda list -e > conda_env.txt
+
+測試環境:
+python test_env.py
