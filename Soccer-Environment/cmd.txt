@@ -1,0 +1,1 @@
+conda create -n rl_comp2 --file anaconda_environment.txt
