@@ -1,0 +1,96 @@
+tasks:
+  - name: "Very Easy Goal"
+    config_fn: none
+    ranges:
+      ball:
+        position:
+          x: [12, 14]
+          y: [-4.5, 4.5]
+      players:
+        0:
+          rotation_y: [140, 40]
+          position:
+            x: [7, 11]
+            y: [-5, 5]
+  - name: "Easy Goal"
+    config_fn: none
+    ranges:
+      ball:
+        position:
+          x: [7, 14]
+          y: [-4.5, 4.5]
+        velocity:
+          x: [0, 10]
+          y: [-10, 10]
+      players:
+        0:
+          rotation_y: [0, 360]
+          position:
+            x: [7, 14]
+            y: [-5, 5]
+  - name: "Medium Goal"
+    config_fn: none
+    ranges:
+      ball:
+        position:
+          x: [0, 14]
+          y: [-5, 5]
+        velocity:
+          x: [-10, 10]
+          y: [-10, 10]
+      players:
+        0:
+          rotation_y: [0, 360]
+          position:
+            x: [-7, 14]
+            y: [-5, 5]
+  - name: "Hard Goal"
+    config_fn: none
+    ranges:
+      ball:
+        position:
+          x: [-10, 14]
+          y: [-5, 5]
+        velocity:
+          x: [-10, 10]
+          y: [-10, 10]
+      players:
+        0:
+          rotation_y: [0, 360]
+          position:
+            x: [-14, 14]
+            y: [-5, 5]
+  - name: "Random Players"
+    config_fn: random_players
+    ranges:
+      ball:
+        position:
+          x: [-10, 14]
+          y: [-5, 5]
+        velocity:
+          x: [-10, 10]
+          y: [-10, 10]
+      players:
+        0:
+          rotation_y: [0, 360]
+          position:
+            x: [-14, 14]
+            y: [-5, 5]
+        1:
+          rotation_y: [0, 360]
+          position:
+            x: [-14, 14]
+            y: [-5, 5]
+          velocity:
+            x: [-10, 10]
+            y: [-10, 10]
+        2:
+          rotation_y: [0, 360]
+          position:
+            x: [-14, 14]
+            y: [-5, 5]
+        3:
+          rotation_y: [0, 360]
+          position:
+            x: [-14, 14]
+            y: [-5, 5]
