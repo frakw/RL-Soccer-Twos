@@ -49,9 +49,11 @@ for i in range(len(output)):
 print("action:", action)
 
 class Agent(AgentInterface):
-    def __init__(self, model, device):
+    def __init__(self, name, model, device):
         self.model = model
         self.device = device
+        self.name = name
+        
 
     def act(self, obs):
         obs = torch.tensor(obs).float().to(self.device)
@@ -68,15 +70,19 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = SoccerModel().to(device)
 model.load_state_dict(torch.load("SoccerTwos.pth"))
-agent1 = Agent(model, device)
-agent2 = Agent(model, device)
-agent3 = Agent(model, device)
-agent4 = Agent(model, device)
+modelx = SoccerModel().to(device)
+modelx.load_state_dict(torch.load("SoccerTwos.pth"))
+agent1 = Agent("blue_1",model, device)
+agent2 = Agent("blue_2",model, device)
+agent3 = Agent("orange_1",modelx, device)
+agent4 = Agent("orange_2",modelx, device)
 
 
 def environment():
     env = soccer_twos.make(
-        render=True,
+        blue_team_name="blue_team",
+        orange_team_name="orange_team",
+        render=False,
         watch=True,
         flatten_branched=True,
         variation=soccer_twos.EnvType.multiagent_player,
@@ -86,17 +92,12 @@ def environment():
 
 env = environment()
 while 1:
-    
     state = env.reset()
     done = False
     with torch.no_grad():
-        while 1:
+        while not done:
             action1 = agent1.act(state[0])
             action2 = agent2.act(state[1])
             action3 = agent3.act(state[2])
             action4 = agent4.act(state[3])
             state, r, done, info = env.step({0: action1, 1: action2, 2: action3, 3: action4})
-            
-            #if done["__all__"]:
-            #    env.close()
-            #    break
