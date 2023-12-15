@@ -201,7 +201,7 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
     # Load the weights into the PyTorch model
     pytorch_model = MAPOCA_torch()
     pytorch_model.load_state_dict(state_dict)
-    torch.save(pytorch_model.state_dict(), "./results/"+str(checkpoint_settings.run_id)+"/SoccerTwos.pth")
+    torch.save(pytorch_model.state_dict(), "../testing/models/SoccerTwos_" + str(checkpoint_settings.run_id) + ".pth")
 
 
 
