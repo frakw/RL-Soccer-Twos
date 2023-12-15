@@ -69,7 +69,7 @@ class Agent(AgentInterface):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model = SoccerModel().to(device)
-model.load_state_dict(torch.load("SoccerTwos.pth"))
+model.load_state_dict(torch.load("SoccerTwos_2.pth"))
 modelx = SoccerModel().to(device)
 modelx.load_state_dict(torch.load("SoccerTwos.pth"))
 agent1 = Agent("blue_1",model, device)
