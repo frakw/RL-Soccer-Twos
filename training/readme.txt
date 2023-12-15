@@ -1,4 +1,6 @@
-conda activate rl_train_ma-poca
+follow the readme.txt inside env_setup folder
+
+conda activate rl_soccer-twos_training
 <cd to this dir>
 
 usage:
