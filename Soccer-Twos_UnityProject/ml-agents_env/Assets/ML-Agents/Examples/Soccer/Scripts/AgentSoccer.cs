@@ -38,6 +38,8 @@ public class AgentSoccer : Agent
     float m_LateralSpeed;
     float m_ForwardSpeed;
 
+    public GameObject ball;
+
 
     [HideInInspector]
     public Rigidbody agentRb;
@@ -45,6 +47,13 @@ public class AgentSoccer : Agent
     BehaviorParameters m_BehaviorParameters;
     public Vector3 initialPos;
     public float rotSign;
+
+    // Add these variables to the AgentSoccer class
+    private float lastTimeBallTouched;
+    private const float ballControlRewardInterval = 5.0f; // time in seconds
+    private const float ballControlReward = 0.05f; // reward for controlling the ball
+
+    private float previousDistanceToBall = float.MaxValue;
 
     EnvironmentParameters m_ResetParams;
 
@@ -93,6 +102,21 @@ public class AgentSoccer : Agent
         agentRb.maxAngularVelocity = 500;
 
         m_ResetParams = Academy.Instance.EnvironmentParameters;
+
+        GameObject ballGameObject = GameObject.FindWithTag("ball"); // Replace "BallTag" with your ball's tag
+        if (ballGameObject != null)
+        {
+            ball = ballGameObject;
+        }
+        else
+        {
+            Debug.LogError("Ball not found. Make sure it's tagged correctly in the scene.");
+        }
+    }
+
+    void Update()
+    {
+        MoveTowardsBallReward();
     }
 
     public void MoveAgent(ActionSegment<int> act)
@@ -190,9 +214,26 @@ public class AgentSoccer : Agent
             discreteActionsOut[1] = 2;
         }
     }
-    /// <summary>
-    /// Used to provide a "kick" to the ball.
-    /// </summary>
+
+    private void MoveTowardsBallReward()
+    {
+
+        float currentDistanceToBall = Vector3.Distance(transform.position, ball.transform.position);
+
+        // Check if the distance to the ball has decreased
+        if (currentDistanceToBall < previousDistanceToBall)
+        {
+            // Reward for moving closer to the ball
+            AddReward(0.001f); // Adjust the reward value as needed
+        }
+
+        // Update the previous distance for the next frame
+        previousDistanceToBall = currentDistanceToBall;
+    }
+
+    // Modify the OnCollisionEnter method in AgentSoccer
+
+
     void OnCollisionEnter(Collision c)
     {
         var force = k_Power * m_KickPower;
@@ -202,16 +243,40 @@ public class AgentSoccer : Agent
         }
         if (c.gameObject.CompareTag("ball"))
         {
-            AddReward(.2f * m_BallTouch);
+            // Ball touch reward
+            AddReward(.5f * m_BallTouch);
+
+            // Ball control reward
+            if (Time.time - lastTimeBallTouched >= ballControlRewardInterval)
+            {
+                AddReward(ballControlReward);
+                lastTimeBallTouched = Time.time;
+            }
+
             var dir = c.contacts[0].point - transform.position;
             dir = dir.normalized;
             c.gameObject.GetComponent<Rigidbody>().AddForce(dir * force);
+
+           
         }
+
+        bool isTeammate = (team == Team.Blue && c.gameObject.CompareTag("blueAgent")) ||
+                        (team == Team.Purple && c.gameObject.CompareTag("purpleAgent"));
+
+        if (isTeammate)
+        {
+            AddReward(-0.1f); // collied with teammate
+            
+        }
+
     }
+
 
     public override void OnEpisodeBegin()
     {
         m_BallTouch = m_ResetParams.GetWithDefault("ball_touch", 0);
+        lastTimeBallTouched = Time.time;
+        previousDistanceToBall = float.MaxValue;
     }
 
 }

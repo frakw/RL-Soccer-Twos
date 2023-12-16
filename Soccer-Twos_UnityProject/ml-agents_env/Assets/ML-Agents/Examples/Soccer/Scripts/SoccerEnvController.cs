@@ -47,6 +47,12 @@ public class SoccerEnvController : MonoBehaviour
 
     private int m_ResetTimer;
 
+    private Transform blueGoalTransform; // Transform of the blue team's goal
+    private Transform purpleGoalTransform; // Transform of the purple team's goal
+    private float previousDistanceToBlueGoal = float.MaxValue;
+    private float previousDistanceToPurpleGoal = float.MaxValue;
+    private Team lastTeamToTouchBall;
+
     void Start()
     {
 
@@ -70,6 +76,30 @@ public class SoccerEnvController : MonoBehaviour
                 m_PurpleAgentGroup.RegisterAgent(item.Agent);
             }
         }
+
+        // Find and assign the goal transforms by tags
+        GameObject blueGoal = GameObject.FindGameObjectWithTag("blueGoal");
+        if (blueGoal != null)
+        {
+            blueGoalTransform = blueGoal.transform;
+        }
+
+        GameObject purpleGoal = GameObject.FindGameObjectWithTag("purpleGoal");
+        if (purpleGoal != null)
+        {
+            purpleGoalTransform = purpleGoal.transform;
+        }
+
+        if (blueGoalTransform != null)
+        {
+            previousDistanceToBlueGoal = Vector3.Distance(ball.transform.position, blueGoalTransform.position);
+        }
+
+        if (purpleGoalTransform != null)
+        {
+            previousDistanceToPurpleGoal = Vector3.Distance(ball.transform.position, purpleGoalTransform.position);
+        }
+
         ResetScene();
     }
 
@@ -82,6 +112,37 @@ public class SoccerEnvController : MonoBehaviour
             m_PurpleAgentGroup.GroupEpisodeInterrupted();
             ResetScene();
         }
+        MoveBallTowardsOpponentAreaReward();
+    }
+
+
+    private void MoveBallTowardsOpponentAreaReward()
+    {
+        if (ball == null || blueGoalTransform == null || purpleGoalTransform == null) return;
+
+        // Calculate the current distance to both goals
+        float currentDistanceToBlueGoal = Vector3.Distance(ball.transform.position, blueGoalTransform.position);
+        float currentDistanceToPurpleGoal = Vector3.Distance(ball.transform.position, purpleGoalTransform.position);
+
+        // Check if the ball is closer to the blue goal compared to the last frame
+        if (currentDistanceToBlueGoal < previousDistanceToBlueGoal)
+        {
+            // Reward purple team for moving the ball closer to the blue goal
+            m_PurpleAgentGroup.AddGroupReward(0.002f);
+            m_BlueAgentGroup.AddGroupReward(-0.001f);
+        }
+
+        // Check if the ball is closer to the purple goal compared to the last frame
+        if (currentDistanceToPurpleGoal < previousDistanceToPurpleGoal)
+        {
+            // Reward blue team for moving the ball closer to the purple goal
+            m_BlueAgentGroup.AddGroupReward(0.002f);
+            m_PurpleAgentGroup.AddGroupReward(-0.001f);
+        }
+
+        // Update the previous distances for the next frame
+        previousDistanceToBlueGoal = currentDistanceToBlueGoal;
+        previousDistanceToPurpleGoal = currentDistanceToPurpleGoal;
     }
 
 
@@ -96,22 +157,71 @@ public class SoccerEnvController : MonoBehaviour
 
     }
 
-    public void GoalTouched(Team scoredTeam)
+    public void GoalTouched(Team scoredTeam, Transform goalHit)
     {
+        float ownGoalPenalty = -2f; // Significant negative value for scoring an own goal
+
+        // Check if it's an own goal
+        bool isOwnGoal = IsOwnGoal(scoredTeam, goalHit);
+
         if (scoredTeam == Team.Blue)
         {
-            m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_PurpleAgentGroup.AddGroupReward(-1);
+            if (isOwnGoal)
+            {
+                // Blue team scored an own goal
+                m_BlueAgentGroup.AddGroupReward(ownGoalPenalty);
+                m_PurpleAgentGroup.AddGroupReward(1); // Optionally reward the opposing team
+            }
+            else
+            {
+                // Blue team scored in the correct goal
+                m_BlueAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
+                m_PurpleAgentGroup.AddGroupReward(-1);
+            }
         }
-        else
+        else // if scoredTeam == Team.Purple
         {
-            m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
-            m_BlueAgentGroup.AddGroupReward(-1);
+            if (isOwnGoal)
+            {
+                // Purple team scored an own goal
+                m_PurpleAgentGroup.AddGroupReward(ownGoalPenalty);
+                m_BlueAgentGroup.AddGroupReward(1); // Optionally reward the opposing team
+            }
+            else
+            {
+                // Purple team scored in the correct goal
+                m_PurpleAgentGroup.AddGroupReward(1 - (float)m_ResetTimer / MaxEnvironmentSteps);
+                m_BlueAgentGroup.AddGroupReward(-1);
+            }
         }
+
         m_PurpleAgentGroup.EndGroupEpisode();
         m_BlueAgentGroup.EndGroupEpisode();
         ResetScene();
+    }
 
+    private bool IsOwnGoal(Team lastTeamToTouch, Transform goalHit)
+    {
+        if (lastTeamToTouch == Team.Blue && goalHit == blueGoalTransform)
+        {
+            // Blue team hit the ball into their own goal
+            return true;
+        }
+        else if (lastTeamToTouch == Team.Purple && goalHit == purpleGoalTransform)
+        {
+            // Purple team hit the ball into their own goal
+            return true;
+        }
+
+        // In other cases, it's not an own goal
+        return false;
+    }
+
+    // Example of how to set the last team to touch the ball
+    // This should be called whenever a team touches the ball
+    public void SetLastTeamToTouchBall(Team team)
+    {
+        lastTeamToTouchBall = team;
     }
 
 
